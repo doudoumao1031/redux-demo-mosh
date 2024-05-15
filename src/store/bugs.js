@@ -1,5 +1,6 @@
 import { createAction, createReducer, createSlice } from '@reduxjs/toolkit';
 import { createSelector } from 'reselect';
+import { apiCallBegan } from './api';
 
 // Action Types
 // traditional way of creating action types without using redux toolkit
@@ -80,36 +81,107 @@ import { createSelector } from 'reselect';
 //     }
 // }
 
-let lastId = 0
+// let lastId = 0
 
 const slice = createSlice({
     name: 'bugs',
-    initialState: [],
+    // initialState: [],
+    initialState: {
+        list: [],
+        loading: false, // for loading indicator
+        lastFetch: null // for caching
+    },
     reducers: {
-        bugAssignedToUser: (state, action) => {
-            const { bugId, userId } = action.payload;
-            const index = state.findIndex(bug => bug.id === bugId);
-            state[index].userId = userId;
+        bugsRequested: (state, action) => {
+            state.loading = true;
         },
+        bugsRequestFailed: (state, action) => {
+            state.loading = false;
+        },
+        bugsReceived: (state, action) => {
+            state.list = action.payload;
+            state.loading = false;
+            state.lastFetch = Date.now();
+        },
+        // destruct and rename parameter id to bugId
+        bugAssignedToUser: (state, action) => {
+            const { id: bugId, userId } = action.payload;
+            const index = state.list.findIndex(bug => bug.id === bugId);
+            state.list[index].userId = userId;
+        },
+        // command - event
+        // addBug - bugAdded (notion of event)
         bugAdded: (state, action) => {
-            state.push({
-                id: ++lastId,
-                description: action.payload.description,
-                resolved: false,
-            })
+            // state.list.push({
+            //     id: ++lastId,
+            //     description: action.payload.description,
+            //     resolved: false,
+            // })
+            state.list.push(action.payload);
         },
         bugRemoved: (state, action) => {
-            return state.filter(bug => bug.id !== action.payload.id)
+            return state.list.filter(bug => bug.id !== action.payload.id)
         },
+        // command - event
+        // resolveBug(command) - bugResolved(notion of event)
         bugResolved: (state, action) => {
-            return state.map(bug => bug.id !== action.payload.id ? bug : {...bug, resolved: true})
-        }
+            return state.list.map(bug => bug.id !== action.payload.id ? bug : {...bug, resolved: true})
+        },
     },
 })
 
 // export default slice.reducer and slice.actions
-export const { bugAdded, bugRemoved, bugResolved, bugAssignedToUser } = slice.actions;
+export const { bugAdded, bugRemoved, bugResolved, bugAssignedToUser, bugsReceived, bugsRequested, bugsRequestFailed } = slice.actions;
 export default slice.reducer;
+
+// Action creators
+// export const loadBugs = () => apiCallBegan({
+//     url,
+//     onStart: bugsRequested.type,
+//     onSuccess: bugsReceived.type,
+//     // move the onError handling to the api middleware
+//     onError: bugsRequestFailed.type
+// })
+
+// in real application, we should save the url in a configuration file
+const url = "/bugs";
+// add caching by using the lastFetch property
+export const loadBugs = () => (dispatch, getState) => {
+    const { lastFetch } = getState().entities.bugs;
+
+    const diffInMinutes = (Date.now() - new Date(lastFetch).getTime()) / 60000;
+    if(diffInMinutes < 10) return;
+
+    dispatch(
+        apiCallBegan({
+            url,
+            onStart: bugsRequested.type,
+            onSuccess: bugsReceived.type,
+            onError: bugsRequestFailed.type
+        })
+    )
+}
+
+export const addBug = bug => apiCallBegan({
+    url,
+    method: 'post',
+    data: bug,
+    onSuccess: bugAdded.type
+})  
+
+export const resolveBug = id => apiCallBegan({
+    url: url + '/' + id,
+    method: 'patch',
+    data: { resolved: true },
+    onSuccess: bugResolved.type
+})
+
+export const assignBugToUser = (bugId, userId) => apiCallBegan({
+    url: url + '/' + bugId,
+    method: 'patch',
+    data: { userId },
+    onSuccess: bugAssignedToUser.type
+})
 
 // export const getUnresolvedBugs = state => store.getState().entities.bugs.filter(bug => !bug.resolved); 
 
