@@ -20,8 +20,8 @@ Welcome to the "Ultimate Redux Course" learning repository! This repository is b
 You can watch the full tutorial videos from the following links:
 
 - [YouTube](https://www.youtube.com/watch?v=poQXNp9ItL4)
-- [Bilibili (Video 1)](https://www.bilibili.com/video/BV123411T7oN/?spm_id_from=333.337.search-card.all.click&vd_source=3386315deeb28e9c894b86730c1e2cd5)
-- [Bilibili (Video 2)](https://www.bilibili.com/video/BV1rR4y1N7QK/?spm_id_from=333.788.recommend_more_video.0&vd_source=3386315deeb28e9c894b86730c1e2cd5)
+<!-- - [Bilibili (Video 1)](https://www.bilibili.com/video/BV123411T7oN/?spm_id_from=333.337.search-card.all.click&vd_source=3386315deeb28e9c894b86730c1e2cd5)
+- [Bilibili (Video 2)](https://www.bilibili.com/video/BV1rR4y1N7QK/?spm_id_from=333.788.recommend_more_video.0&vd_source=3386315deeb28e9c894b86730c1e2cd5) -->
 
 ## Introduction
 
