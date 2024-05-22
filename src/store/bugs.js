@@ -1,6 +1,7 @@
 import { createAction, createReducer, createSlice } from '@reduxjs/toolkit';
 import { createSelector } from 'reselect';
 import { apiCallBegan } from './api';
+import axios from 'axios';
 
 // Action Types
 // traditional way of creating action types without using redux toolkit
@@ -162,12 +163,23 @@ export const loadBugs = () => (dispatch, getState) => {
     )
 }
 
-export const addBug = bug => apiCallBegan({
-    url,
-    method: 'post',
-    data: bug,
-    onSuccess: bugAdded.type
-})  
+// if we change the implementation, but we have not the behavior of our application
+export const addBug = bug => async dispatch => {
+    const response = await axios.request({
+        baseURL: 'http://localhost:3000/api',
+        url: '/bugs',
+        method: 'post',
+        data: bug
+    })
+    dispatch(bugAdded(response.data));
+}
+
+// export const addBug = bug => apiCallBegan({
+//     url,
+//     method: 'post',
+//     data: bug,
+//     onSuccess: bugAdded.type
+// })  
 
 export const resolveBug = id => apiCallBegan({
     url: url + '/' + id,
