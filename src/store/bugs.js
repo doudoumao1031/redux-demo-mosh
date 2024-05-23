@@ -164,22 +164,22 @@ export const loadBugs = () => (dispatch, getState) => {
 }
 
 // if we change the implementation, but we have not the behavior of our application
-export const addBug = bug => async dispatch => {
-    const response = await axios.request({
-        baseURL: 'http://localhost:3000/api',
-        url: '/bugs',
-        method: 'post',
-        data: bug
-    })
-    dispatch(bugAdded(response.data));
-}
+// export const addBug = bug => async dispatch => {
+//     const response = await axios.request({
+//         baseURL: 'http://localhost:3000/api',
+//         url: '/bugs',
+//         method: 'post',
+//         data: bug
+//     })
+//     dispatch(bugAdded(response.data));
+// }
 
-// export const addBug = bug => apiCallBegan({
-//     url,
-//     method: 'post',
-//     data: bug,
-//     onSuccess: bugAdded.type
-// })  
+export const addBug = bug => apiCallBegan({
+    url,
+    method: 'post',
+    data: bug,
+    onSuccess: bugAdded.type
+})  
 
 export const resolveBug = id => apiCallBegan({
     url: url + '/' + id,
