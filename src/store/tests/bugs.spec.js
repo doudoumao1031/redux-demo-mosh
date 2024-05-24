@@ -1,4 +1,4 @@
-import { addBug, bugAdded } from '../bugs'
+import { addBug, bugAdded, getUnresolvedBugs } from '../bugs'
 import { apiCallBegan } from '../api'
 import configureAppStore from '../configureStore'
 import axios from 'axios'
@@ -41,6 +41,15 @@ describe('bugsSlice', () => {
 
     const bugsSlice = () => store.getState().entities.bugs
 
+    // every test should start with a clean state
+    const createState = () => ({
+        entities: {
+            bugs: {
+                list: []
+            }
+        }
+    })
+
     it('should add the bug to the store if it\'s saved to the server', async () => {
         // Arrange
         const bug = {description: 'a'}
@@ -65,5 +74,35 @@ describe('bugsSlice', () => {
 
         // Assert
         expect(bugsSlice().list).toHaveLength(0)
+    })
+
+    it('should mark the bug as resolved if it\'s saved to the server', async () => {
+        // Arrange
+        fakeAxios.onPatch('/bugs/1').reply(200, {id: 1, resolved: true})
+        fakeAxios.onPost('/bugs').reply(200, {id: 1})
+
+        // Act
+        await store.dispatch(addBug({}))
+        await store.dispatch(resolveBug(1))
+
+        // Assert
+        expect(bugsSlice().list[0].resolved).toBe(true)
+    })
+
+    describe('selectors', ()=>{
+        it('getUnresolvedBugs', () => {
+            // Arrange
+            // every test should start with a clean state
+            const state = createState() 
+            state.entities.bugs.list = [
+                {id: 1, resolved: true},
+                {id: 2},
+                {id: 3}
+            ]
+            // Act
+            const result = getUnresolvedBugs(state)
+            // Assert
+            expect(result).toHaveLength(2)
+        })
     })
 })

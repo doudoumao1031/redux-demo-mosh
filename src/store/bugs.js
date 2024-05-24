@@ -201,10 +201,10 @@ const getBugs = state => state.entities.bugs;
 
 export const getUnresolvedBugs = createSelector(
   getBugs,
-  bugs => bugs.filter(bug => !bug.resolved)
+  bugs => bugs.list.filter(bug => !bug.resolved)
 );
 
 export const getBugsByUser = userId => createSelector(
   getBugs,
-  bugs => bugs.filter(bug => bug.userId === userId)
+  bugs => bugs.list.filter(bug => bug.userId === userId)
 );
