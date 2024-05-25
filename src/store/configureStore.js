@@ -14,6 +14,10 @@ export default function configureAppStore(){
         reducer,
         // middleware: [logger],
         // middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(logger("console")),
-        middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(logger({destination: "console"}), toast, api),
+        middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(
+            // logger({destination: "console"}), 
+            toast, 
+            api,
+        ),
     });
 } 

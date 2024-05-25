@@ -1,4 +1,4 @@
-import { addBug, bugAdded, getUnresolvedBugs } from '../bugs'
+import { addBug, bugAdded, resolveBug, getUnresolvedBugs, loadBugs} from '../bugs'
 import { apiCallBegan } from '../api'
 import configureAppStore from '../configureStore'
 import axios from 'axios'
@@ -64,6 +64,69 @@ describe('bugsSlice', () => {
         expect(bugsSlice().list).toContainEqual(response)
     })
 
+    describe('loading bugs', () => {
+        describe('if the bugs exist in the cache', () => {
+            it('they should not be fetched from the server again', async () => {
+                // Arrange
+                fakeAxios.onGet('/bugs').reply(200, [{id: 1}])
+                // Act
+                await store.dispatch(loadBugs())
+                await store.dispatch(loadBugs())
+                await store.dispatch(loadBugs())
+                // Assert
+                expect(fakeAxios.history.get.length).toBe(1)
+            })
+            // it('they should be fetched from the server if the cache is older than 10 minutes', async () => {
+            //     // Arrange
+            //     fakeAxios.onGet('/bugs').reply(200, [{id: 1}])
+            //     // Act
+            //     await store.dispatch(loadBugs())
+            //     await store.dispatch(loadBugs())
+            //     await store.dispatch(loadBugs())
+            //     // Assert
+            //     expect(fakeAxios.history.get.length).toBe(1)
+            // })
+        })
+        describe('if the bugs don\'t exist in the cache', () => {
+            it('they should be fetched from the server and put in the store', async () => {
+                // Arrange
+                fakeAxios.onGet('/bugs').reply(200, [{id: 1}])
+                // Act
+                await store.dispatch(loadBugs())
+                // Assert
+                expect(bugsSlice().list).toHaveLength(1)
+            })
+            describe('loading indicator', () => {
+                it('should be true while fetching the bugs', () => {
+                    // Arrange
+                    fakeAxios.onGet('/bugs').reply(() => {
+                        // function that will be called when the request is made
+                        expect(bugsSlice().loading).toBe(true)
+                        return [200, [{id: 1}]]
+                    })
+                    store.dispatch(loadBugs())
+                })
+                it('should be false after the bugs are fetched', async () => {
+                    // Arrange
+                    fakeAxios.onGet('/bugs').reply(200, [{id: 1}])
+                    // Act
+                    await store.dispatch(loadBugs())
+                    // Assert
+                    expect(bugsSlice().loading).toBe(false)
+                })
+                it('should be false if the server returns an error', async () => {
+                    // Arrange
+                    fakeAxios.onGet('/bugs').reply(500)
+                    // Act
+                    await store.dispatch(loadBugs())
+                    // Assert
+                    expect(bugsSlice().loading).toBe(false)
+                })
+            })
+        })
+    })
+
+
     it('should not add the bug to the store if it\'s not saved to the server', async () => {
         // Arrange
         const bug = {description: 'a'}
@@ -78,8 +141,8 @@ describe('bugsSlice', () => {
 
     it('should mark the bug as resolved if it\'s saved to the server', async () => {
         // Arrange
-        fakeAxios.onPatch('/bugs/1').reply(200, {id: 1, resolved: true})
         fakeAxios.onPost('/bugs').reply(200, {id: 1})
+        fakeAxios.onPatch('/bugs/1').reply(200, {id: 1, resolved: true})
 
         // Act
         await store.dispatch(addBug({}))

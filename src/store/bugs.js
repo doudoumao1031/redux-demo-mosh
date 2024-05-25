@@ -121,12 +121,20 @@ const slice = createSlice({
             state.list.push(action.payload);
         },
         bugRemoved: (state, action) => {
-            return state.list.filter(bug => bug.id !== action.payload.id)
+            // return state.list.filter(bug => bug.id !== action.payload.id)
+            const index = state.list.findIndex(bug => bug.id === action.payload.id);
+            if (index !== -1) {
+                state.list.splice(index, 1);
+            }
         },
         // command - event
         // resolveBug(command) - bugResolved(notion of event)
         bugResolved: (state, action) => {
-            return state.list.map(bug => bug.id !== action.payload.id ? bug : {...bug, resolved: true})
+            // return state.list.map(bug => bug.id !== action.payload.id ? bug : {...bug, resolved: true})
+            const index = state.list.findIndex(bug => bug.id === action.payload.id);
+            if (index !== -1) {
+                state.list[index].resolved = true;
+            }
         },
     },
 })
@@ -153,7 +161,7 @@ export const loadBugs = () => (dispatch, getState) => {
     const diffInMinutes = (Date.now() - new Date(lastFetch).getTime()) / 60000;
     if(diffInMinutes < 10) return;
 
-    dispatch(
+    return dispatch(
         apiCallBegan({
             url,
             onStart: bugsRequested.type,
